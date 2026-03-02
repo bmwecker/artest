@@ -1,102 +1,54 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>Безмаркерная AR сцена</title>
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <!-- Подключаем компонент для WebXR AR -->
-    <script src="https://unpkg.com/aframe-xr@3.3.2/dist/aframe-xr.min.js"></script>
+    <meta charset="utf-8">
+    <title>WebXR без маркера</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-hit-test-component@0.1.0/dist/aframe-hit-test-component.min.js"></script>
   </head>
-  <body style="margin: 0; overflow: hidden;">
-    <!-- Включаем WebXR сессию с режимом 'immersive-ar' и запрашиваем фичи -->
+  <body>
     <a-scene
-      xr-mode="immersive-ar"
-      xr-features="hit-test"
-      loading-screen="dotsColor: black; backgroundColor: white"
-      embedded
-      ar
+      webxr="requiredFeatures: hit-test; optionalFeatures: dom-overlay"
+      style="width: 100%; height: 100%;"
+      background="color: #DDDDDD"   <!-- временно серый фон, чтобы увидеть сцену -->
     >
-      <!-- Камера, необходимая для работы WebXR -->
       <a-camera></a-camera>
 
-      <!-- Прицел для наведения на поверхность. Появится, когда найдена плоскость -->
+      <!-- Прицел-помощник: появляется, когда найдена плоскость -->
       <a-entity
-        xr-hit-test
+        hit-test="target:#objects-container;"
         raycaster="objects: .cantap"
-        xr-hit-test-target
         geometry="primitive: ring; radiusInner: 0.1; radiusOuter: 0.15"
-        material="color: #00FFFF; transparent: true; opacity: 0.8"
+        material="color: cyan; transparent: true; opacity: 0.6"
         position="0 0 -1"
-        rotation="0 0 0"
-        scale="1 1 1"
       ></a-entity>
 
-      <!-- Контейнер для размещаемых объектов. Важно: class="cantap" для взаимодействия -->
       <a-entity id="objects-container" class="cantap"></a-entity>
 
-      <!-- Инструкция для пользователя -->
-      <a-text
-        value="Найди поверхность и коснись экрана"
-        align="center"
-        color="#FFF"
-        position="0 1 -2"
-        width="4"
-        shader="flat"
-        opacity="0.8"
-        id="instruction-text"
-      ></a-text>
-
-      <!-- Скрипт для обработки касаний и размещения объектов -->
-      <script>
-        AFRAME.registerComponent('place-on-click', {
-          init: function () {
-            this.el.sceneEl.addEventListener('xr-hittargetfound', function (evt) {
-              console.log('Поверхность найдена!');
-              // Можно скрыть инструкцию или изменить цвет прицела
-            });
-
-            this.el.sceneEl.addEventListener('xr-hittargetlost', function (evt) {
-              console.log('Поверхность потеряна');
-            });
-
-            // Обработка клика/касания по экрану
-            this.el.sceneEl.addEventListener('click', (evt) => {
-              // Проверяем, активна ли AR-сессия и найден ли прицел
-              const xrSystem = this.el.sceneEl.xrSystem;
-              if (!xrSystem || !xrSystem.isPresenting) return;
-
-              const hitTest = this.el.sceneEl.components['xr-hit-test'];
-              if (hitTest && hitTest.hitTestResult) {
-                // Получаем позицию и ориентацию прицела (места, куда пользователь смотрит)
-                const pose = hitTest.hitTestResult;
-                
-                // Создаем новый объект (в примере - вращающийся тор)
-                const newObject = document.createElement('a-entity');
-                newObject.setAttribute('geometry', 'primitive: torus; radius: 0.3; radiusTubular: 0.1');
-                newObject.setAttribute('material', 'color: #FFAA00; roughness: 0.3; metalness: 0.1');
-                newObject.setAttribute('scale', '0.5 0.5 0.5');
-                newObject.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 5000');
-                newObject.setAttribute('class', 'placed-object'); // Для возможной стилизации
-                
-                // Размещаем объект в позиции прицела
-                newObject.setAttribute('position', pose.transform.position);
-                newObject.setAttribute('rotation', pose.transform.orientation);
-                
-                // Добавляем объект в контейнер
-                document.getElementById('objects-container').appendChild(newObject);
-                
-                console.log('Объект размещен!');
-              }
-            });
-          }
-        });
-
-        // Ждем загрузки сцены и инициализируем компонент
-        document.querySelector('a-scene').addEventListener('loaded', function () {
-          this.setAttribute('place-on-click', '');
-        });
-      </script>
+      <a-text value="Наведите на пол и коснитесь" align="center" color="black" position="0 1 -2"></a-text>
     </a-scene>
+
+    <script>
+      const scene = document.querySelector('a-scene');
+      scene.addEventListener('enter-vr', () => {
+        console.log('VR/AR режим активирован');
+      });
+      scene.addEventListener('exit-vr', () => {
+        console.log('Выход из VR/AR');
+      });
+
+      // Добавляем обработчик касания для размещения
+      scene.addEventListener('click', (evt) => {
+        const hitTestEl = document.querySelector('[hit-test]');
+        if (hitTestEl && hitTestEl.components['hit-test'].hitTestResult) {
+          const pose = hitTestEl.components['hit-test'].hitTestResult;
+          const newObj = document.createElement('a-sphere');
+          newObj.setAttribute('radius', '0.2');
+          newObj.setAttribute('color', 'red');
+          newObj.setAttribute('position', pose.transform.position);
+          document.getElementById('objects-container').appendChild(newObj);
+        }
+      });
+    </script>
   </body>
 </html>
