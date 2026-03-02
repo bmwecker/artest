@@ -2,50 +2,119 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>AR модель с музыкой</title>
+  <title>AR model with music</title>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <style>
-    body { margin: 0; overflow: hidden; font-family: sans-serif; }
-    model-viewer { width: 100%; height: 100vh; background: white; }
-    .ar-button, .music-button {
-      position: fixed;
-      bottom: 30px;
-      transform: translateX(-50%);
-      background: #007aff;
-      color: white;
-      border: none;
-      border-radius: 40px;
-      padding: 16px 32px;
-      font-size: 18px;
-      font-weight: bold;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-      z-index: 1000;
-      cursor: pointer;
-      transition: background 0.2s;
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
     }
-    .ar-button { left: 30%; }
-    .music-button { left: 70%; background: #34c759; }
-    .music-button.playing { background: #ff3b30; }
-    .music-button:disabled { background: #ccc; cursor: not-allowed; }
+    model-viewer {
+      width: 100%;
+      height: 100vh;
+      background: white;
+      --poster-color: transparent;
+    }
+    /* Контейнер для кнопок — фиксированное позиционирование поверх всего */
+    .button-panel {
+      position: fixed;
+      bottom: 40px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      z-index: 10000;
+      pointer-events: none; /* чтобы клики проходили сквозь контейнер, но не сквозь кнопки */
+    }
+    .button-panel button {
+      pointer-events: auto;
+      width: 90px;
+      height: 90px;
+      border-radius: 60px;
+      border: none;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      color: white;
+      font-size: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      cursor: pointer;
+      transition: transform 0.1s, background 0.2s;
+    }
+    .button-panel button:active {
+      transform: scale(0.95);
+    }
+    .button-panel button span {
+      font-size: 14px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.9;
+    }
+    .button-panel button.music-off {
+      background: rgba(100, 100, 100, 0.9);
+    }
+    .button-panel button.music-on {
+      background: #007aff;
+    }
+    /* Если AR не поддерживается, кнопка AR бледнее */
+    .button-panel button:disabled {
+      opacity: 0.4;
+      transform: none;
+      pointer-events: none;
+    }
+    /* Маленькая подсказка для iOS */
+    .note {
+      position: fixed;
+      top: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      background: rgba(255,255,255,0.8);
+      padding: 8px;
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+    }
   </style>
 </head>
 <body>
+  <div class="note" id="platformNote">
+    ⚡ Tap AR button to view in your space
+  </div>
+
   <model-viewer 
     id="modelViewer"
     src="textured_mesh.glb"
     ar
     ar-modes="webxr scene-viewer quick-look"
+    ar-dom-overlay="root: body"
     camera-controls
     auto-rotate
     environment-image="neutral"
     shadow-intensity="1"
-    alt="3D модель">
+    alt="3D model">
   </model-viewer>
 
-  <button id="arButton" class="ar-button">📱 Смотреть в AR</button>
-  <button id="musicButton" class="music-button">🎵 Музыка выкл</button>
+  <div class="button-panel">
+    <button id="arButton" class="ar-button">
+      <span>📱</span>
+      <span>AR</span>
+    </button>
+    <button id="musicButton" class="music-off">
+      <span>🔇</span>
+      <span>MUSIC</span>
+    </button>
+  </div>
 
-  <audio id="bgMusic" loop>
+  <audio id="bgMusic" loop preload="auto">
     <source src="music.mp3" type="audio/mpeg">
   </audio>
 
@@ -54,28 +123,69 @@
     const arButton = document.getElementById('arButton');
     const musicButton = document.getElementById('musicButton');
     const bgMusic = document.getElementById('bgMusic');
+    const platformNote = document.getElementById('platformNote');
 
-    // Управление AR
+    // --- Определение платформы и обновление подсказки ---
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) {
+      platformNote.innerHTML = '📱 On iOS, music will not play during AR (system limitation).';
+    }
+
+    // --- AR кнопка ---
     modelViewer.addEventListener('load', () => {
       arButton.disabled = !modelViewer.canActivateAR;
-    });
-    arButton.addEventListener('click', () => {
-      if (modelViewer.canActivateAR) modelViewer.activateAR();
+      if (!modelViewer.canActivateAR) {
+        platformNote.innerHTML = '❌ AR not supported on this device/browser.';
+      }
     });
 
-    // Управление музыкой
+    arButton.addEventListener('click', () => {
+      if (modelViewer.canActivateAR) {
+        modelViewer.activateAR();
+      }
+    });
+
+    // --- Музыка: переключение иконки/состояния ---
     let isPlaying = false;
-    musicButton.addEventListener('click', () => {
+    musicButton.addEventListener('click', (e) => {
+      e.stopPropagation(); // не передавать событие дальше
       if (isPlaying) {
         bgMusic.pause();
-        musicButton.textContent = '🎵 Музыка выкл';
-        musicButton.classList.remove('playing');
+        musicButton.classList.remove('music-on');
+        musicButton.classList.add('music-off');
+        musicButton.innerHTML = '<span>🔇</span><span>MUSIC</span>';
       } else {
-        bgMusic.play().catch(e => alert('Не удалось воспроизвести музыку: ' + e));
-        musicButton.textContent = '🎵 Музыка вкл';
-        musicButton.classList.add('playing');
+        // Пытаемся воспроизвести. Важно: требуется взаимодействие пользователя
+        bgMusic.play()
+          .then(() => {
+            musicButton.classList.remove('music-off');
+            musicButton.classList.add('music-on');
+            musicButton.innerHTML = '<span>🔊</span><span>MUSIC</span>';
+            isPlaying = true;
+          })
+          .catch((err) => {
+            console.warn('Audio play failed:', err);
+            alert('Could not play music. Tap again or check browser permissions.');
+          });
       }
       isPlaying = !isPlaying;
+    });
+
+    // Обработка окончания воспроизведения (если вдруг)
+    bgMusic.addEventListener('ended', () => {
+      isPlaying = false;
+      musicButton.classList.remove('music-on');
+      musicButton.classList.add('music-off');
+      musicButton.innerHTML = '<span>🔇</span><span>MUSIC</span>';
+    });
+
+    // Дополнительно: если AR-сессия началась, можно попытаться продолжить музыку,
+    // но в WebXR она и так продолжит играть.
+    modelViewer.addEventListener('ar-status', (event) => {
+      if (event.detail.status === 'session-started') {
+        console.log('AR session started');
+        // Можно оставить музыку как есть, если она играла до этого.
+      }
     });
   </script>
 </body>
