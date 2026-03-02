@@ -1,54 +1,5 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>WebXR без маркера</title>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://unpkg.com/aframe-hit-test-component@0.1.0/dist/aframe-hit-test-component.min.js"></script>
-  </head>
-  <body>
-    <a-scene
-      webxr="requiredFeatures: hit-test; optionalFeatures: dom-overlay"
-      style="width: 100%; height: 100%;"
-      background="color: #DDDDDD"   <!-- временно серый фон, чтобы увидеть сцену -->
-    >
-      <a-camera></a-camera>
-
-      <!-- Прицел-помощник: появляется, когда найдена плоскость -->
-      <a-entity
-        hit-test="target:#objects-container;"
-        raycaster="objects: .cantap"
-        geometry="primitive: ring; radiusInner: 0.1; radiusOuter: 0.15"
-        material="color: cyan; transparent: true; opacity: 0.6"
-        position="0 0 -1"
-      ></a-entity>
-
-      <a-entity id="objects-container" class="cantap"></a-entity>
-
-      <a-text value="Наведите на пол и коснитесь" align="center" color="black" position="0 1 -2"></a-text>
-    </a-scene>
-
-    <script>
-      const scene = document.querySelector('a-scene');
-      scene.addEventListener('enter-vr', () => {
-        console.log('VR/AR режим активирован');
-      });
-      scene.addEventListener('exit-vr', () => {
-        console.log('Выход из VR/AR');
-      });
-
-      // Добавляем обработчик касания для размещения
-      scene.addEventListener('click', (evt) => {
-        const hitTestEl = document.querySelector('[hit-test]');
-        if (hitTestEl && hitTestEl.components['hit-test'].hitTestResult) {
-          const pose = hitTestEl.components['hit-test'].hitTestResult;
-          const newObj = document.createElement('a-sphere');
-          newObj.setAttribute('radius', '0.2');
-          newObj.setAttribute('color', 'red');
-          newObj.setAttribute('position', pose.transform.position);
-          document.getElementById('objects-container').appendChild(newObj);
-        }
-      });
-    </script>
-  </body>
+<head><title>Test</title></head>
+<body><h1>Hello, Render!</h1></body>
 </html>
