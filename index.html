@@ -11,12 +11,15 @@
 </head>
 <body>
   <model-viewer 
-    src="textured_mesh.glb"  <!-- замените на свою модель -->
+    src="textured_mesh.glb"
     ar
     ar-modes="webxr scene-viewer quick-look"
     camera-controls
     auto-rotate
+    rotation-per-second="30deg"
+    environment-image="neutral"
     shadow-intensity="1"
+    exposure="0.8"
     alt="3D модель">
   </model-viewer>
 </body>
