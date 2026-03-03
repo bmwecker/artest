@@ -137,7 +137,6 @@
       <span>🔇</span>
       <span>MUSIC</span>
     </button>
-    <!-- Кнопка фото теперь использует modelViewer.toDataURL() -->
     <button id="photoButton">
       <span>📸</span>
       <span>PHOTO</span>
@@ -173,12 +172,20 @@
         modelViewer.addEventListener('load', updateARStatus);
       }
 
+      // --- AR с предупреждением о фото ---
       arButton.addEventListener('click', () => {
-        if (modelViewer.canActivateAR) {
-          modelViewer.activateAR();
-        } else {
+        if (!modelViewer.canActivateAR) {
           alert('AR is not available on this device.');
+          return;
         }
+        // Показываем понятную подсказку перед входом в AR
+        const deviceType = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream ? 'iOS' : 'Android';
+        const photoHint = deviceType === 'iOS' 
+          ? '📸 В AR-режиме нажмите круглую кнопку в правом нижнем углу, чтобы сделать фото.'
+          : '📸 В AR-режиме нажмите белую круглую кнопку внизу экрана, чтобы сделать фото.';
+        alert(photoHint);
+        // Запускаем AR
+        modelViewer.activateAR();
       });
 
       // --- Музыка ---
@@ -213,10 +220,9 @@
         musicButton.innerHTML = '<span>🔇</span><span>MUSIC</span>';
       });
 
-      // --- Новая функция фото: скриншот model-viewer ---
+      // --- Фото в предпросмотре ---
       photoButton.addEventListener('click', () => {
         platformNote.innerHTML = '📸 Capturing...';
-        // Используем встроенный метод model-viewer для получения dataURL
         const screenshotData = modelViewer.toDataURL();
         if (screenshotData) {
           const link = document.createElement('a');
