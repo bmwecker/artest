@@ -16,34 +16,37 @@
       background: white;
       --poster-color: transparent;
     }
-    /* Контейнер для кнопок — фиксированное позиционирование поверх всего */
+    /* Панель кнопок */
     .button-panel {
       position: fixed;
-      bottom: 40px;
+      bottom: 60px;
       left: 0;
       right: 0;
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
-      gap: 30px;
+      gap: 20px;
       z-index: 10000;
-      pointer-events: none; /* чтобы клики проходили сквозь контейнер, но не сквозь кнопки */
+      pointer-events: none;
+      padding: 0 10px;
     }
     .button-panel button {
       pointer-events: auto;
-      width: 90px;
-      height: 90px;
-      border-radius: 60px;
+      width: min(270px, 40vw);       /* не больше 270px, но адаптируется */
+      height: auto;
+      aspect-ratio: 1/1;             /* квадратные */
+      border-radius: 50%;             /* идеальный круг */
       border: none;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(8px);
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(12px);
       color: white;
-      font-size: 40px;
+      font-size: min(100px, 15vw);    /* большая иконка */
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      gap: 8px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
       cursor: pointer;
       transition: transform 0.1s, background 0.2s;
     }
@@ -51,10 +54,10 @@
       transform: scale(0.95);
     }
     .button-panel button span {
-      font-size: 14px;
-      font-weight: 500;
+      font-size: min(32px, 5vw);      /* подпись */
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
       opacity: 0.9;
     }
     .button-panel button.music-off {
@@ -63,13 +66,12 @@
     .button-panel button.music-on {
       background: #007aff;
     }
-    /* Если AR не поддерживается, кнопка AR бледнее */
     .button-panel button:disabled {
       opacity: 0.4;
       transform: none;
       pointer-events: none;
     }
-    /* Маленькая подсказка для iOS */
+    /* Подсказка сверху */
     .note {
       position: fixed;
       top: 20px;
@@ -90,9 +92,10 @@
     ⚡ Tap AR button to view in your space
   </div>
 
+  <!-- 3D модель с поддержкой AR и overlay для кнопок -->
   <model-viewer 
     id="modelViewer"
-    src="textured_mesh.glb"
+    src="textured_mesh.glb"      <!-- замените на свой файл -->
     ar
     ar-modes="webxr scene-viewer quick-look"
     ar-dom-overlay="root: body"
@@ -115,7 +118,7 @@
   </div>
 
   <audio id="bgMusic" loop preload="auto">
-    <source src="music.mp3" type="audio/mpeg">
+    <source src="music.mp3" type="audio/mpeg">   <!-- замените на свой MP3 -->
   </audio>
 
   <script>
@@ -125,7 +128,7 @@
     const bgMusic = document.getElementById('bgMusic');
     const platformNote = document.getElementById('platformNote');
 
-    // --- Определение платформы и обновление подсказки ---
+    // --- Определение платформы ---
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     if (isIOS) {
       platformNote.innerHTML = '📱 On iOS, music will not play during AR (system limitation).';
@@ -145,17 +148,17 @@
       }
     });
 
-    // --- Музыка: переключение иконки/состояния ---
+    // --- Музыка: переключение ---
     let isPlaying = false;
     musicButton.addEventListener('click', (e) => {
-      e.stopPropagation(); // не передавать событие дальше
+      e.stopPropagation();
       if (isPlaying) {
         bgMusic.pause();
         musicButton.classList.remove('music-on');
         musicButton.classList.add('music-off');
         musicButton.innerHTML = '<span>🔇</span><span>MUSIC</span>';
+        isPlaying = false;
       } else {
-        // Пытаемся воспроизвести. Важно: требуется взаимодействие пользователя
         bgMusic.play()
           .then(() => {
             musicButton.classList.remove('music-off');
@@ -168,10 +171,9 @@
             alert('Could not play music. Tap again or check browser permissions.');
           });
       }
-      isPlaying = !isPlaying;
     });
 
-    // Обработка окончания воспроизведения (если вдруг)
+    // Сброс иконки, если трек закончился (хотя loop не даст)
     bgMusic.addEventListener('ended', () => {
       isPlaying = false;
       musicButton.classList.remove('music-on');
@@ -179,12 +181,10 @@
       musicButton.innerHTML = '<span>🔇</span><span>MUSIC</span>';
     });
 
-    // Дополнительно: если AR-сессия началась, можно попытаться продолжить музыку,
-    // но в WebXR она и так продолжит играть.
+    // Просто логируем начало AR-сессии (кнопки остаются видимыми благодаря ar-dom-overlay)
     modelViewer.addEventListener('ar-status', (event) => {
       if (event.detail.status === 'session-started') {
         console.log('AR session started');
-        // Можно оставить музыку как есть, если она играла до этого.
       }
     });
   </script>
