@@ -2,145 +2,77 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>AR model with photo</title>
+  <title>AR модель с фото</title>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      font-family: system-ui, -apple-system, sans-serif;
-      background: black;
-    }
-    model-viewer {
-      width: 100%;
-      height: 100vh;
-      background: black;
-    }
-    /* Панель кнопок */
+    /* Стили БЕЗ ИЗМЕНЕНИЙ (ваш чёрный фон, золотые кнопки) */
+    body { margin: 0; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; background: black; }
+    model-viewer { width: 100%; height: 100vh; background: black; }
     .button-panel {
-      position: fixed;
-      bottom: 60px;
-      left: 0;
-      right: 0;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-      z-index: 10000;
-      pointer-events: none;
-      padding: 0 10px;
+      position: fixed; bottom: 60px; left: 0; right: 0;
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;
+      z-index: 10000; pointer-events: none; padding: 0 10px;
     }
     .button-panel button {
       pointer-events: auto;
-      width: min(270px, 40vw);
-      height: auto;
-      aspect-ratio: 1/1;
-      border-radius: 50%;
-      border: 2px solid rgba(252, 215, 128, 0.5);
-      background: rgba(0, 0, 0, 0.6);
-      color: #FCD780;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-      cursor: pointer;
+      width: min(270px, 40vw); height: auto; aspect-ratio: 1/1;
+      border-radius: 50%; border: 2px solid rgba(252, 215, 128, 0.5);
+      background: rgba(0, 0, 0, 0.6); color: #FCD780;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); cursor: pointer;
       transition: all 0.2s ease;
     }
     .button-panel button:hover {
-      border-color: #FCD780;
-      background: rgba(20, 20, 20, 0.8);
-      transform: scale(1.02);
+      border-color: #FCD780; background: rgba(20, 20, 20, 0.8); transform: scale(1.02);
     }
-    .button-panel button:active {
-      transform: scale(0.95);
-    }
-    .button-panel button span:first-child {
-      font-size: min(180px, 25vw);
-      line-height: 1;
-    }
+    .button-panel button:active { transform: scale(0.95); }
+    .button-panel button span:first-child { font-size: min(180px, 25vw); line-height: 1; }
     .button-panel button span:last-child {
-      font-size: min(48px, 7vw);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      opacity: 0.9;
-      color: #FCD780;
+      font-size: min(48px, 7vw); font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; opacity: 0.9; color: #FCD780;
     }
-    .button-panel button:disabled {
-      opacity: 0.4;
-      transform: none;
-      pointer-events: none;
-      border-color: rgba(255,255,255,0.3);
-    }
-    /* Подсказка сверху */
     .note {
-      position: fixed;
-      top: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      color: #FCD780;
-      font-size: min(32px, 6vw);
-      background: rgba(0, 0, 0, 0.6);
-      padding: 12px 30px;
-      backdrop-filter: blur(4px);
-      z-index: 9999;
-      font-weight: 500;
-      border-radius: 60px;
+      position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+      text-align: center; color: #FCD780; font-size: min(32px, 6vw);
+      background: rgba(0, 0, 0, 0.6); padding: 12px 30px; backdrop-filter: blur(4px);
+      z-index: 9999; font-weight: 500; border-radius: 60px;
       border: 1px solid rgba(252, 215, 128, 0.3);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3); white-space: nowrap;
     }
     @media (max-width: 480px) {
-      .note {
-        top: 20px;
-        font-size: 20px;
-        padding: 8px 16px;
-        white-space: normal;
-        width: 90%;
-      }
+      .note { top: 20px; font-size: 20px; padding: 8px 16px; white-space: normal; width: 90%; }
     }
   </style>
 </head>
 <body>
   <div class="note" id="platformNote">
-    📸 Press PHOTO button in AR to capture
+    📸 Нажми PHOTO, чтобы снять модель
   </div>
 
-  <!-- 
-    ВАЖНО: 
-    - ar-modes="webxr" — только WebXR, без Scene Viewer
-    - ar-dom-overlay="root: body" — позволяет нашим кнопкам быть поверх AR
-  -->
+  <!-- Режимы: webxr (для наших кнопок) + scene-viewer/quick-look как запасные -->
   <model-viewer 
     id="modelViewer"
-    src="textured_mesh.glb"   <!-- ВАША МОДЕЛЬ -->
+    src="textured_mesh.glb"
     ar
-    ar-modes="webxr"
+    ar-modes="webxr scene-viewer quick-look"
     ar-dom-overlay="root: body"
     camera-controls
     auto-rotate
     environment-image="neutral"
     shadow-intensity="1"
-    alt="3D model">
+    alt="3D модель">
   </model-viewer>
 
   <div class="button-panel">
-    <!-- Кнопка AR — используем встроенную, но она будет запускать WebXR -->
     <button id="arButton" class="ar-button">
       <span>📱</span>
       <span>AR</span>
     </button>
-    <!-- Кнопка фото — будет видна и в AR, и в предпросмотре -->
     <button id="photoButton">
       <span>📸</span>
       <span>PHOTO</span>
     </button>
   </div>
-
-  <!-- Музыку временно убрал для чистоты эксперимента, но можно вернуть -->
 
   <script>
     (function() {
@@ -149,63 +81,44 @@
       const photoButton = document.getElementById('photoButton');
       const platformNote = document.getElementById('platformNote');
 
-      // --- Проверка поддержки AR ---
-      function updateARStatus() {
-        if (modelViewer.canActivateAR) {
-          arButton.disabled = false;
-          platformNote.innerHTML = '📸 Press PHOTO button in AR to capture';
-        } else {
-          arButton.disabled = true;
-          platformNote.innerHTML = '❌ AR not supported on this device/browser.';
-        }
-      }
-
-      if (modelViewer.loaded) {
-        updateARStatus();
-      } else {
-        modelViewer.addEventListener('load', updateARStatus);
-      }
-
-      // --- Запуск AR ---
+      // --- 1. НАДЁЖНЫЙ ЗАПУСК AR: кнопка активна всегда ---
       arButton.addEventListener('click', () => {
-        if (modelViewer.canActivateAR) {
+        // Пытаемся запустить AR. Если не получится — ловим ошибку.
+        try {
           modelViewer.activateAR();
-        } else {
-          alert('AR is not available on this device.');
+        } catch (e) {
+          console.warn('Ошибка запуска AR:', e);
+          alert('Не удалось запустить AR. Возможно, нужно установить ARCore (для Android) или обновить браузер.');
         }
       });
 
-      // --- Функция фото (работает в WebXR благодаря preserveDrawingBuffer) ---
+      // --- 2. ФОТОГРАФ (работает только в режиме WebXR) ---
       photoButton.addEventListener('click', () => {
-        // Берём canvas из model-viewer
         const canvas = modelViewer.querySelector('canvas');
         if (!canvas) {
-          alert('Canvas not found');
+          alert('Камера ещё не готова. Попробуй через секунду.');
           return;
         }
 
-        // Показываем, что фоткаем
-        platformNote.innerHTML = '📸 Capturing...';
-
-        // Конвертируем canvas в dataURL и скачиваем
+        platformNote.innerHTML = '📸 Снимок...';
         try {
           const dataURL = canvas.toDataURL('image/png');
           const link = document.createElement('a');
           link.download = 'ar-photo.png';
           link.href = dataURL;
           link.click();
-          platformNote.innerHTML = '📸 Press PHOTO button in AR to capture';
+          platformNote.innerHTML = '📸 Нажми PHOTO, чтобы снять модель';
         } catch (e) {
-          console.error('Screenshot failed:', e);
-          alert('Failed to capture. Make sure you are in AR mode and try again.');
-          platformNote.innerHTML = '📸 Press PHOTO button in AR to capture';
+          console.error('Фото не удалось:', e);
+          alert('Не вышло сделать снимок. Возможно, ты не в AR-режиме?');
+          platformNote.innerHTML = '📸 Нажми PHOTO, чтобы снять модель';
         }
       });
 
-      // --- Информация для iOS ---
+      // --- 3. Просто информация для iOS ---
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       if (isIOS) {
-        platformNote.innerHTML = '📱 On iOS, use system screenshot button. Our photo button works only in WebXR.';
+        platformNote.innerHTML = '📱 На iOS кнопка PHOTO работает только внутри AR (WebXR).';
       }
     })();
   </script>
