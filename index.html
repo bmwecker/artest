@@ -3,12 +3,9 @@
 <head>
   <meta charset="utf-8">
   <title>AR model with music and photo</title>
-  <!-- Подключаем model-viewer -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-  <!-- Подключаем html2canvas для скриншотов -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    /* --- Стили полностью из рабочей версии + новая кнопка --- */
+    /* --- Стили без изменений (ваши) --- */
     body {
       margin: 0;
       overflow: hidden;
@@ -116,7 +113,7 @@
 </head>
 <body>
   <div class="note" id="platformNote">
-    ⚡ Tap AR button to view in your space
+    ⚡ Tap AR → use system camera button for photos
   </div>
 
   <model-viewer 
@@ -140,7 +137,7 @@
       <span>🔇</span>
       <span>MUSIC</span>
     </button>
-    <!-- Новая кнопка для фото (скриншот) -->
+    <!-- Кнопка фото теперь использует modelViewer.toDataURL() -->
     <button id="photoButton">
       <span>📸</span>
       <span>PHOTO</span>
@@ -163,7 +160,7 @@
       function updateARStatus() {
         if (modelViewer.canActivateAR) {
           arButton.disabled = false;
-          platformNote.innerHTML = '⚡ Tap AR button to view in your space';
+          platformNote.innerHTML = '⚡ Tap AR → use system camera button for photos';
         } else {
           arButton.disabled = true;
           platformNote.innerHTML = '❌ AR not supported on this device/browser.';
@@ -216,34 +213,26 @@
         musicButton.innerHTML = '<span>🔇</span><span>MUSIC</span>';
       });
 
-      // --- Функция фото (скриншот страницы) ---
+      // --- Новая функция фото: скриншот model-viewer ---
       photoButton.addEventListener('click', () => {
-        // Показываем уведомление, что фото делается
         platformNote.innerHTML = '📸 Capturing...';
-        // Захватываем всю страницу
-        html2canvas(document.body, {
-          scale: 1.5,            // повышаем качество
-          allowTaint: false,
-          useCORS: true,
-          backgroundColor: null,  // сохраняем прозрачность (фон model-viewer чёрный)
-        }).then((canvas) => {
-          // Создаём ссылку для скачивания
+        // Используем встроенный метод model-viewer для получения dataURL
+        const screenshotData = modelViewer.toDataURL();
+        if (screenshotData) {
           const link = document.createElement('a');
-          link.download = 'ar-screenshot.png';
-          link.href = canvas.toDataURL('image/png');
+          link.download = 'model-screenshot.png';
+          link.href = screenshotData;
           link.click();
-          // Возвращаем исходную подсказку
-          platformNote.innerHTML = '⚡ Tap AR button to view in your space';
-        }).catch((error) => {
-          console.error('Screenshot failed:', error);
+          platformNote.innerHTML = '⚡ Tap AR → use system camera button for photos';
+        } else {
           alert('Failed to capture screenshot.');
-          platformNote.innerHTML = '⚡ Tap AR button to view in your space';
-        });
+          platformNote.innerHTML = '⚡ Tap AR → use system camera button for photos';
+        }
       });
 
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       if (isIOS) {
-        platformNote.innerHTML = '📱 On iOS, music will not play during AR (system limitation).';
+        platformNote.innerHTML = '📱 On iOS, use system camera button in AR. Music stops in AR.';
       }
     })();
   </script>
