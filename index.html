@@ -9,12 +9,12 @@
       margin: 0;
       overflow: hidden;
       font-family: system-ui, -apple-system, sans-serif;
+      background: white;
     }
     model-viewer {
       width: 100%;
       height: 100vh;
       background: white;
-      --poster-color: transparent;
     }
     /* Панель кнопок */
     .button-panel {
@@ -32,15 +32,15 @@
     }
     .button-panel button {
       pointer-events: auto;
-      width: min(270px, 40vw);       /* не больше 270px, но адаптируется */
+      width: min(270px, 40vw);
       height: auto;
-      aspect-ratio: 1/1;             /* квадратные */
-      border-radius: 50%;             /* идеальный круг */
+      aspect-ratio: 1/1;
+      border-radius: 50%;
       border: none;
       background: rgba(0, 0, 0, 0.8);
       backdrop-filter: blur(12px);
       color: white;
-      font-size: min(100px, 15vw);    /* большая иконка */
+      font-size: min(100px, 15vw);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -54,7 +54,7 @@
       transform: scale(0.95);
     }
     .button-panel button span {
-      font-size: min(32px, 5vw);      /* подпись */
+      font-size: min(32px, 5vw);
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -92,13 +92,11 @@
     ⚡ Tap AR button to view in your space
   </div>
 
-  <!-- 3D модель с поддержкой AR и overlay для кнопок -->
   <model-viewer 
     id="modelViewer"
-    src="textured_mesh.glb"      <!-- замените на свой файл -->
+    src="textured_mesh.glb"
     ar
     ar-modes="webxr scene-viewer quick-look"
-    ar-dom-overlay="root: body"
     camera-controls
     auto-rotate
     environment-image="neutral"
@@ -118,75 +116,83 @@
   </div>
 
   <audio id="bgMusic" loop preload="auto">
-    <source src="music.mp3" type="audio/mpeg">   <!-- замените на свой MP3 -->
+    <source src="music.mp3" type="audio/mpeg">
   </audio>
 
   <script>
-    const modelViewer = document.getElementById('modelViewer');
-    const arButton = document.getElementById('arButton');
-    const musicButton = document.getElementById('musicButton');
-    const bgMusic = document.getElementById('bgMusic');
-    const platformNote = document.getElementById('platformNote');
+    (function() {
+      const modelViewer = document.getElementById('modelViewer');
+      const arButton = document.getElementById('arButton');
+      const musicButton = document.getElementById('musicButton');
+      const bgMusic = document.getElementById('bgMusic');
+      const platformNote = document.getElementById('platformNote');
 
-    // --- Определение платформы ---
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    if (isIOS) {
-      platformNote.innerHTML = '📱 On iOS, music will not play during AR (system limitation).';
-    }
-
-    // --- AR кнопка ---
-    modelViewer.addEventListener('load', () => {
-      arButton.disabled = !modelViewer.canActivateAR;
-      if (!modelViewer.canActivateAR) {
-        platformNote.innerHTML = '❌ AR not supported on this device/browser.';
+      // --- Функция обновления состояния AR-кнопки ---
+      function updateARStatus() {
+        if (modelViewer.canActivateAR) {
+          arButton.disabled = false;
+          platformNote.innerHTML = '⚡ Tap AR button to view in your space';
+        } else {
+          arButton.disabled = true;
+          platformNote.innerHTML = '❌ AR not supported on this device/browser.';
+        }
       }
-    });
 
-    arButton.addEventListener('click', () => {
-      if (modelViewer.canActivateAR) {
-        modelViewer.activateAR();
+      // --- Ждём загрузки модели и проверяем поддержку AR ---
+      if (modelViewer.loaded) {
+        updateARStatus();
+      } else {
+        modelViewer.addEventListener('load', updateARStatus);
       }
-    });
 
-    // --- Музыка: переключение ---
-    let isPlaying = false;
-    musicButton.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (isPlaying) {
-        bgMusic.pause();
+      // --- AR кнопка: запуск AR ---
+      arButton.addEventListener('click', () => {
+        if (modelViewer.canActivateAR) {
+          modelViewer.activateAR();
+        } else {
+          alert('AR is not available on this device.');
+        }
+      });
+
+      // --- Музыка: переключение ---
+      let isPlaying = false;
+      musicButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (isPlaying) {
+          bgMusic.pause();
+          musicButton.classList.remove('music-on');
+          musicButton.classList.add('music-off');
+          musicButton.innerHTML = '<span>🔇</span><span>MUSIC</span>';
+          isPlaying = false;
+        } else {
+          bgMusic.play()
+            .then(() => {
+              musicButton.classList.remove('music-off');
+              musicButton.classList.add('music-on');
+              musicButton.innerHTML = '<span>🔊</span><span>MUSIC</span>';
+              isPlaying = true;
+            })
+            .catch((err) => {
+              console.warn('Audio play failed:', err);
+              alert('Could not play music. Tap again or check browser permissions.');
+            });
+        }
+      });
+
+      // Сброс иконки, если трек закончился
+      bgMusic.addEventListener('ended', () => {
+        isPlaying = false;
         musicButton.classList.remove('music-on');
         musicButton.classList.add('music-off');
         musicButton.innerHTML = '<span>🔇</span><span>MUSIC</span>';
-        isPlaying = false;
-      } else {
-        bgMusic.play()
-          .then(() => {
-            musicButton.classList.remove('music-off');
-            musicButton.classList.add('music-on');
-            musicButton.innerHTML = '<span>🔊</span><span>MUSIC</span>';
-            isPlaying = true;
-          })
-          .catch((err) => {
-            console.warn('Audio play failed:', err);
-            alert('Could not play music. Tap again or check browser permissions.');
-          });
-      }
-    });
+      });
 
-    // Сброс иконки, если трек закончился (хотя loop не даст)
-    bgMusic.addEventListener('ended', () => {
-      isPlaying = false;
-      musicButton.classList.remove('music-on');
-      musicButton.classList.add('music-off');
-      musicButton.innerHTML = '<span>🔇</span><span>MUSIC</span>';
-    });
-
-    // Просто логируем начало AR-сессии (кнопки остаются видимыми благодаря ar-dom-overlay)
-    modelViewer.addEventListener('ar-status', (event) => {
-      if (event.detail.status === 'session-started') {
-        console.log('AR session started');
+      // Определение платформы (просто информационно)
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS) {
+        platformNote.innerHTML = '📱 On iOS, music will not play during AR (system limitation).';
       }
-    });
+    })();
   </script>
 </body>
 </html>
