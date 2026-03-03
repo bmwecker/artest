@@ -2,10 +2,10 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>AR model with music and photo</title>
+  <title>AR модель с музыкой и фото</title>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <style>
-    /* --- Стили из последней рабочей версии (чёрный фон, золотые кнопки) --- */
+    /* --- ЧЁРНЫЙ ФОН, ЗОЛОТОЙ ТЕКСТ, БОЛЬШИЕ КНОПКИ (как в последней рабочей версии) --- */
     body {
       margin: 0;
       overflow: hidden;
@@ -121,7 +121,6 @@
     src="textured_mesh.glb"   <!-- замените на свою модель -->
     ar
     ar-modes="webxr scene-viewer quick-look"
-    ar-dom-overlay="root: body"
     camera-controls
     auto-rotate
     environment-image="neutral"
@@ -157,28 +156,17 @@
       const bgMusic = document.getElementById('bgMusic');
       const platformNote = document.getElementById('platformNote');
 
-      // --- Проверка поддержки AR и активация кнопки ---
-      function updateARStatus() {
-        if (modelViewer.canActivateAR) {
-          arButton.disabled = false;
-        } else {
-          arButton.disabled = true;
-          platformNote.innerHTML = '❌ AR не поддерживается на этом устройстве.';
-        }
-      }
-
-      if (modelViewer.loaded) {
-        updateARStatus();
-      } else {
-        modelViewer.addEventListener('load', updateARStatus);
-      }
-
-      // --- Запуск AR ---
+      // --- Запуск AR (как в рабочей версии, без лишних проверок) ---
       arButton.addEventListener('click', () => {
         if (modelViewer.canActivateAR) {
           modelViewer.activateAR();
         } else {
-          alert('AR не поддерживается.');
+          // Пытаемся запустить принудительно – иногда canActivateAR ошибается
+          try {
+            modelViewer.activateAR();
+          } catch (e) {
+            alert('AR не запускается. Возможно, требуется установить ARCore (Google Play Services для AR) или обновить браузер.');
+          }
         }
       });
 
@@ -218,7 +206,6 @@
       photoButton.addEventListener('click', () => {
         platformNote.innerHTML = '📸 Снимок...';
         try {
-          // modelViewer.toDataURL() возвращает screenshot текущего вида модели
           const screenshotData = modelViewer.toDataURL();
           if (screenshotData) {
             const link = document.createElement('a');
