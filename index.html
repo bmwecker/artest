@@ -2,19 +2,20 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>AR model with music</title>
+  <title>AR model</title>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <style>
     body {
       margin: 0;
       overflow: hidden;
-      font-family: system-ui, -apple-system, sans-serif;
-      background: white;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: black; /* Чёрный фон на всякий случай */
     }
     model-viewer {
       width: 100%;
       height: 100vh;
-      background: white;
+      background: black; /* <--- Чёрный фон предпросмотра */
+      --poster-color: black; /* Убираем возможный белый фон у постера */
     }
     /* Панель кнопок */
     .button-panel {
@@ -25,100 +26,125 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 20px;
+      gap: 30px;
       z-index: 10000;
       pointer-events: none;
-      padding: 0 10px;
+      padding: 0 20px;
     }
+    /* Стиль кнопок в современном минималистичном стиле */
     .button-panel button {
       pointer-events: auto;
-      width: min(270px, 40vw);
+      width: min(240px, 35vw);
       height: auto;
       aspect-ratio: 1/1;
       border-radius: 50%;
-      border: none;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(12px);
-      color: white;
+      border: 2px solid rgba(252, 215, 128, 0.5); /* Полупрозрачная обводка #FCD780 */
+      background: rgba(0, 0, 0, 0.5); /* Полупрозрачный чёрный фон */
+      backdrop-filter: blur(8px);
+      color: #FCD780; /* Основной цвет текста и иконок */
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.6);
       cursor: pointer;
-      transition: transform 0.1s, background 0.2s;
+      transition: all 0.3s ease;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+    }
+    .button-panel button:hover {
+      border-color: #FCD780; /* Яркая обводка при наведении */
+      background: rgba(30, 30, 30, 0.7);
+      transform: scale(1.02);
+      box-shadow: 0 20px 35px rgba(0,0,0,0.8);
     }
     .button-panel button:active {
-      transform: scale(0.95);
+      transform: scale(0.98);
     }
-    /* Увеличенная иконка-эмодзи */
+    /* Огромная иконка */
     .button-panel button span:first-child {
-      font-size: min(180px, 25vw);
+      font-size: min(160px, 22vw);
       line-height: 1;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
     }
     /* Подпись под иконкой */
     .button-panel button span:last-child {
-      font-size: min(48px, 7vw);
-      font-weight: 600;
+      font-size: min(42px, 6vw);
+      font-weight: 500;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      opacity: 0.9;
+      letter-spacing: 2px;
+      opacity: 0.95;
+      color: #FCD780;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
+    /* Специфичные стили для кнопок в зависимости от состояния музыки */
     .button-panel button.music-off {
-      background: rgba(100, 100, 100, 0.9);
+      border-color: rgba(252, 215, 128, 0.4);
     }
     .button-panel button.music-on {
-      background: #007aff;
+      border-color: #FCD780;
+      background: rgba(252, 215, 128, 0.15); /* Лёгкая золотистая подсветка */
+      box-shadow: 0 0 25px rgba(252, 215, 128, 0.3);
+    }
+    .button-panel button.music-on span {
+      color: #FCD780;
     }
     .button-panel button:disabled {
-      opacity: 0.4;
+      opacity: 0.3;
+      border-color: rgba(255,255,255,0.3);
       transform: none;
       pointer-events: none;
+      filter: grayscale(1);
     }
-    /* Подсказка сверху — крупная */
+    /* Подсказка сверху в новом стиле */
     .note {
       position: fixed;
       top: 30px;
-      left: 0;
-      right: 0;
+      left: 50%;
+      transform: translateX(-50%);
       text-align: center;
-      color: #333;
-      font-size: min(32px, 6vw);
-      background: rgba(255, 255, 255, 0.85);
-      padding: 12px 20px;
+      color: #FCD780; /* Цвет текста */
+      font-size: min(28px, 5vw);
+      background: rgba(0, 0, 0, 0.5); /* Полупрозрачный чёрный фон */
+      padding: 12px 30px;
       backdrop-filter: blur(8px);
       z-index: 9999;
-      font-weight: 500;
+      font-weight: 400;
       border-radius: 60px;
-      width: fit-content;
-      margin: 0 auto;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      border: 1px solid rgba(252, 215, 128, 0.3); /* Тонкая обводка */
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
       white-space: nowrap;
+      letter-spacing: 1px;
+      width: fit-content;
     }
-    /* На очень маленьких экранах уменьшаем отступы */
     @media (max-width: 480px) {
       .note {
         top: 20px;
-        font-size: 20px;
-        padding: 8px 16px;
+        font-size: 18px;
+        padding: 8px 20px;
+        white-space: normal; /* Перенос на маленьких экранах */
+        width: 90%;
+      }
+      .button-panel {
+        gap: 15px;
       }
     }
   </style>
 </head>
 <body>
   <div class="note" id="platformNote">
-    ⚡ Tap AR button to view in your space
+    ⚡ Tap AR to view in your space
   </div>
 
   <model-viewer 
     id="modelViewer"
-    src="textured_mesh.glb"
+    src="textured_mesh.glb" <!-- ЗДЕСЬ ВАША МОДЕЛЬ -->
     ar
     ar-modes="webxr scene-viewer quick-look"
     camera-controls
     auto-rotate
-    environment-image="neutral"
+    environment-image="neutral" <!-- Для лучшего освещения модели на чёрном фоне -->
     shadow-intensity="1"
     alt="3D model">
   </model-viewer>
@@ -135,7 +161,7 @@
   </div>
 
   <audio id="bgMusic" loop preload="auto">
-    <source src="music.mp3" type="audio/mpeg">
+    <source src="music.mp3" type="audio/mpeg"> <!-- ЗДЕСЬ ВАША МУЗЫКА -->
   </audio>
 
   <script>
@@ -146,14 +172,13 @@
       const bgMusic = document.getElementById('bgMusic');
       const platformNote = document.getElementById('platformNote');
 
-      // --- Функция обновления состояния AR-кнопки ---
       function updateARStatus() {
         if (modelViewer.canActivateAR) {
           arButton.disabled = false;
-          platformNote.innerHTML = '⚡ Tap AR button to view in your space';
+          platformNote.innerHTML = '⚡ Tap AR to view in your space';
         } else {
           arButton.disabled = true;
-          platformNote.innerHTML = '❌ AR not supported on this device/browser.';
+          platformNote.innerHTML = '❌ AR not supported';
         }
       }
 
@@ -191,7 +216,7 @@
             })
             .catch((err) => {
               console.warn('Audio play failed:', err);
-              alert('Could not play music. Tap again or check browser permissions.');
+              alert('Could not play music. Tap again.');
             });
         }
       });
@@ -203,9 +228,10 @@
         musicButton.innerHTML = '<span>🔇</span><span>MUSIC</span>';
       });
 
+      // Информация для iOS
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       if (isIOS) {
-        platformNote.innerHTML = '📱 On iOS, music will not play during AR (system limitation).';
+        platformNote.innerHTML = '📱 On iOS, music stops in AR';
       }
     })();
   </script>
