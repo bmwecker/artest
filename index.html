@@ -40,7 +40,6 @@
       background: rgba(0, 0, 0, 0.8);
       backdrop-filter: blur(12px);
       color: white;
-      font-size: min(100px, 15vw);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -53,8 +52,14 @@
     .button-panel button:active {
       transform: scale(0.95);
     }
-    .button-panel button span {
-      font-size: min(32px, 5vw);
+    /* Увеличенная иконка-эмодзи */
+    .button-panel button span:first-child {
+      font-size: min(180px, 25vw);
+      line-height: 1;
+    }
+    /* Подпись под иконкой */
+    .button-panel button span:last-child {
+      font-size: min(48px, 7vw);
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -71,19 +76,33 @@
       transform: none;
       pointer-events: none;
     }
-    /* Подсказка сверху */
+    /* Подсказка сверху — крупная */
     .note {
       position: fixed;
-      top: 20px;
+      top: 30px;
       left: 0;
       right: 0;
       text-align: center;
-      color: #666;
-      font-size: 14px;
-      background: rgba(255,255,255,0.8);
-      padding: 8px;
-      backdrop-filter: blur(4px);
+      color: #333;
+      font-size: min(32px, 6vw);
+      background: rgba(255, 255, 255, 0.85);
+      padding: 12px 20px;
+      backdrop-filter: blur(8px);
       z-index: 9999;
+      font-weight: 500;
+      border-radius: 60px;
+      width: fit-content;
+      margin: 0 auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      white-space: nowrap;
+    }
+    /* На очень маленьких экранах уменьшаем отступы */
+    @media (max-width: 480px) {
+      .note {
+        top: 20px;
+        font-size: 20px;
+        padding: 8px 16px;
+      }
     }
   </style>
 </head>
@@ -138,14 +157,12 @@
         }
       }
 
-      // --- Ждём загрузки модели и проверяем поддержку AR ---
       if (modelViewer.loaded) {
         updateARStatus();
       } else {
         modelViewer.addEventListener('load', updateARStatus);
       }
 
-      // --- AR кнопка: запуск AR ---
       arButton.addEventListener('click', () => {
         if (modelViewer.canActivateAR) {
           modelViewer.activateAR();
@@ -154,7 +171,7 @@
         }
       });
 
-      // --- Музыка: переключение ---
+      // --- Музыка ---
       let isPlaying = false;
       musicButton.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -179,7 +196,6 @@
         }
       });
 
-      // Сброс иконки, если трек закончился
       bgMusic.addEventListener('ended', () => {
         isPlaying = false;
         musicButton.classList.remove('music-on');
@@ -187,7 +203,6 @@
         musicButton.innerHTML = '<span>🔇</span><span>MUSIC</span>';
       });
 
-      // Определение платформы (просто информационно)
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       if (isIOS) {
         platformNote.innerHTML = '📱 On iOS, music will not play during AR (system limitation).';
