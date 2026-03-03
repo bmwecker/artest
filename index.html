@@ -14,7 +14,7 @@
     model-viewer {
       width: 100%;
       height: 100vh;
-      background: black; /* Чёрный фон предпросмотра */
+      background: black; /* Чёрный фон */
     }
     /* Панель кнопок */
     .button-panel {
@@ -30,7 +30,6 @@
       pointer-events: none;
       padding: 0 10px;
     }
-    /* Новый стиль кнопок (минимализм, золотая обводка) */
     .button-panel button {
       pointer-events: auto;
       width: min(270px, 40vw);
@@ -57,12 +56,10 @@
     .button-panel button:active {
       transform: scale(0.95);
     }
-    /* Увеличенная иконка-эмодзи */
     .button-panel button span:first-child {
       font-size: min(180px, 25vw);
       line-height: 1;
     }
-    /* Подпись под иконкой */
     .button-panel button span:last-child {
       font-size: min(48px, 7vw);
       font-weight: 600;
@@ -85,7 +82,7 @@
       pointer-events: none;
       border-color: rgba(255,255,255,0.3);
     }
-    /* Подсказка сверху в новом стиле */
+    /* Подсказка сверху */
     .note {
       position: fixed;
       top: 30px;
@@ -120,9 +117,10 @@
     ⚡ Tap AR button to view in your space
   </div>
 
+  <!-- ВАЖНО: атрибуты model-viewer точно такие же, как в рабочей версии -->
   <model-viewer 
     id="modelViewer"
-    src="textured_mesh.glb"   <!-- ВАША МОДЕЛЬ -->
+    src="textured_mesh.glb"
     ar
     ar-modes="webxr scene-viewer quick-look"
     camera-controls
@@ -144,9 +142,10 @@
   </div>
 
   <audio id="bgMusic" loop preload="auto">
-    <source src="music.mp3" type="audio/mpeg">   <!-- ВАША МУЗЫКА -->
+    <source src="music.mp3" type="audio/mpeg">
   </audio>
 
+  <!-- СКРИПТЫ полностью скопированы из рабочей версии -->
   <script>
     (function() {
       const modelViewer = document.getElementById('modelViewer');
@@ -179,7 +178,6 @@
         }
       });
 
-      // --- Музыка ---
       let isPlaying = false;
       musicButton.addEventListener('click', (e) => {
         e.stopPropagation();
